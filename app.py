@@ -25,6 +25,8 @@ dictConfig({
 
 app = Flask(__name__)
 UPLOAD_FOLDER = './temp'
+if os.path.isdir(UPLOAD_FOLDER) == False :
+    os.mkdir(UPLOAD_FOLDER)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['SECRET_KEY'] = os.urandom(12).hex()
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
