@@ -2,8 +2,26 @@ import os
 from flask import Flask, flash, request, redirect, jsonify
 from werkzeug.utils import secure_filename
 import torch
+import time
 from PIL import Image
 from transformers import ViTFeatureExtractor, AutoTokenizer, ViTForImageClassification
+from logging.config import dictConfig
+
+dictConfig({
+    'version': 1,
+    'formatters': {'default': {
+        'format': '[%(asctime)s] %(levelname)s in %(module)s: %(message)s',
+    }},
+    'handlers': {'wsgi': {
+        'class': 'logging.StreamHandler',
+        'stream': 'ext://flask.logging.wsgi_errors_stream',
+        'formatter': 'default'
+    }},
+    'root': {
+        'level': 'INFO',
+        'handlers': ['wsgi']
+    }
+})
 
 app = Flask(__name__)
 UPLOAD_FOLDER = './temp'
@@ -52,10 +70,13 @@ def upload_file():
             print(request)
             return 'No selected file'
         if file and allowed_file(file.filename):
-            print(request)
+            app.logger.info('file transfered: %s ', file.filename)
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            startTime = time.time()
             preds = predict(Image.open(os.path.join(app.config['UPLOAD_FOLDER'], filename)))
+            executionTime = (time.time() - startTime)
+            app.logger.info('prediction took: %s ',  str(executionTime))
             os.remove(os.path.join(app.config['UPLOAD_FOLDER'], filename))
             return jsonify(preds)
 
